@@ -1,0 +1,28 @@
+﻿.nav-link {
+    padding: 0.25rem 0;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: rgba(0, 0, 0, 0.75);
+    background-color: transparent;
+    border-bottom: 0.2rem solid transparent;
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+.navbar-light .navbar-toggler {
+    color: black;
+    border-color: rgba(0, 0, 0, 0.3);
+    border-radius: 0px;
+}
+
+.nav-link:hover, .nav-link:focus {
+    color: rgba(0, 0, 0, 0.85);
+    border-bottom: 0.5rem solid transparent;
+    border-bottom-color: rgba(0, 0, 0, 0.4);
+}
+
+.active {
+    font-size: 1.35rem;
+    color: #000;
+    border-bottom: 0.5rem solid transparent;
+    border-bottom-color: #000;
+}
