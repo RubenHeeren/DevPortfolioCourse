@@ -1,29 +1,61 @@
-﻿@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+﻿@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,700;0,900;1,400&display=swap');
 
-html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+body {
+    font-family: 'Roboto', sans-serif;
 }
 
-a, .btn-link {
-    color: #0366d6;
+.btn {
+    border-radius: 0px;
 }
 
-.btn-primary {
-    color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+.card {
+    border-radius: 0px;
 }
 
-.content {
-    padding-top: 1.1rem;
+.shadow {
+    box-shadow: 0 0.3rem 0.6rem rgba(0, 0, 0, 0.4) !important;
 }
 
-.valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
+.shadow-no-hover {
+    box-shadow: 0 0.15rem 0.4rem rgba(0, 0, 0, 0.5) !important;
 }
 
-.invalid {
-    outline: 1px solid red;
+.shadow:hover {
+    box-shadow: 0 0.15rem 0.4rem rgba(0, 0, 0, 0.8) !important;
+}
+
+.bg-motherboard-dev {
+    background-image: url("../assets/img/publicbackgrounds/bg-motherboard-dev.jpg");
+}
+
+.min-vh-90 {
+    min-height: 90vh !important;
+}
+
+.bg-white-94 {
+    background-color: rgba(255, 255, 255, 0.94);
+}
+
+.f-size-3 {
+    font-size: 3rem;
+}
+
+@media (max-width: 992px)
+{
+    .md-and-smaller-my-3 {
+        margin-top: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .bg-motherboard-dev {
+        background-image: url("../assets/img/publicbackgrounds/bg-motherboard.jpg");
+    }
+}
+
+@media (min-width: 992px) {
+    .md-f-size-1-5 {
+        font-size: 1.5rem;
+    }
 }
 
 .validation-message {
