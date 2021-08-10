@@ -19,4 +19,8 @@
     <Folder Include="wwwroot\assets\img\publicbackgrounds\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Shared\Shared.csproj" />
+  </ItemGroup>
+
 </Project>
