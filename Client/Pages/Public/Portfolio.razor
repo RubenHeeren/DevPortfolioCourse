@@ -2,6 +2,11 @@
 
 <Client.Components.Public.Shared.Navbar />
 
+@if (_showingExamplePortfolioProjectModalWindow == true)
+{
+    <Client.Components.Public.Portfolio.ExamplePortfolioProjectModalWindow ParentMethodToCallOnClickBtnClose="() => _showingExamplePortfolioProjectModalWindow = false" />
+}
+
 <main class="container min-vh-90 py-5">
     <div class="row">
         <div class="col">
@@ -21,7 +26,7 @@
                             </p>
                         </div>
 
-                        <button class="btn btn-primary stretched-link">
+                        <button @onclick="() => _showingExamplePortfolioProjectModalWindow = true" class="btn btn-primary stretched-link">
                             <i class="fas fa-info-circle"></i> More information
                         </button>
                     </div>
@@ -38,7 +43,7 @@
                             </p>
                         </div>
 
-                        <button class="btn btn-primary stretched-link">
+                        <button @onclick="() => _showingExamplePortfolioProjectModalWindow = true" class="btn btn-primary stretched-link">
                             <i class="fas fa-info-circle"></i> More information
                         </button>
                     </div>
@@ -49,13 +54,13 @@
                         <img src="assets/img/publicbackgrounds/bg-motherboard.jpg" alt="Portfolio project thumbnail image" />
 
                         <div class="card-body">
-                            <h3 class="card-title fw-bold">My First Project</h3>
+                            <h3 class="card-title fw-bold">My First Project</h3>    
                             <p class="card-text">
                                 @(String.Join(" ", _exampleExcerpt.Split().Take(43).ToArray()))...
                             </p>
                         </div>
 
-                        <button class="btn btn-primary stretched-link">
+                        <button @onclick="() => _showingExamplePortfolioProjectModalWindow = true" class="btn btn-primary stretched-link">
                             <i class="fas fa-info-circle"></i> More information
                         </button>
                     </div>
@@ -69,6 +74,8 @@
 
 @code
 {
+    private bool _showingExamplePortfolioProjectModalWindow = false;
+
     private string _exampleExcerpt = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi gravida eget tellus nec ornare." +
                                     " Mauris ac nisi sit amet erat feugiat consequat id sit amet erat. Integer at erat vitae est volutpat gravida sit amet nec velit." + 
                                     " Phasellus et faucibus ex, id feugiat mi. Etiam justo est, sodales nec convallis non, pulvinar in nulla." + 

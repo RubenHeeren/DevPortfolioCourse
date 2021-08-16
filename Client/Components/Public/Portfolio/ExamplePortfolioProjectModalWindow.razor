@@ -1,9 +1,9 @@
-﻿<div class="modal fade" id="informationalModal">
+﻿<div class="modal fade @_modalClass" id="informationalModal" tabindex="-1" aria-labelledby="informationalModalLabel" role="dialog" style="display:@_modalDisplay">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="informationalModal">Example Portfolio Project</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aira-label="Close"></button>
+                <h5 class="modal-title" id="informationalModalLabel">Example Portfolio Project</h5>
+                <button @onclick="CloseModal" type="button" class="btn-close" data-bs-dismiss="modal" aira-label="Close"></button>
             </div>
 
             <div class="modal-body">
@@ -15,7 +15,7 @@
                     </div>
 
                     <div class="carousel-inner">
-                        <div class="carousel-item-active">
+                        <div class="carousel-item active">
                             <a href="assets/img/publicbackgrounds/bg-motherboard-dev.jpg" target="_blank">
 
                                 <img src="assets/img/publicbackgrounds/bg-motherboard-dev.jpg" class="d-block w-100" alt="Portfolio project carousel image" />
@@ -81,10 +81,40 @@
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary btn-lg shadow" data-bs-dismiss="modal">
+                <button @onclick="CloseModal" type="button" class="btn btn-primary btn-lg shadow" data-bs-dismiss="modal">
                     Close
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+@if (_showBackdrop == true)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code
+{
+    [Parameter] public EventCallback ParentMethodToCallOnClickBtnClose { get; set; }
+    private string _modalDisplay = null;
+    private string _modalClass = null;
+    private bool _showBackdrop = false;
+
+    protected override void OnInitialized() => ShowModal();
+
+    private void ShowModal()
+    {
+        _modalDisplay = "block;";
+        _modalClass = "show";
+        _showBackdrop = true;
+    }
+
+    private void CloseModal()
+    {
+        _modalDisplay = "none;";
+        _modalClass = string.Empty;
+        _showBackdrop = false;
+        ParentMethodToCallOnClickBtnClose.InvokeAsync();
+    }
+}
