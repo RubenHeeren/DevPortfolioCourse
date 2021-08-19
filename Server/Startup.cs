@@ -35,6 +35,8 @@ namespace Server
                 options.UseSqlite(
                     Configuration.GetConnectionString("DefaultConnection")));
 
+            services.AddAutoMapper(typeof(DTOMappings));
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Server", Version = "v1" });
