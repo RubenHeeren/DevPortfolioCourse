@@ -43,6 +43,14 @@ body {
     background-image: url("../assets/img/publicbackgrounds/bg-motherboard-dev.jpg");
 }
 
+.bg-lightgray {
+    background-color: #EBEBEB;
+}
+
+.hover-bg-white:hover {
+    background-color: #FFF;
+}
+
 .min-vh-90 {
     min-height: 90vh !important;
 }
@@ -64,6 +72,10 @@ body {
 
     .bg-motherboard-dev {
         background-image: url("../assets/img/publicbackgrounds/bg-motherboard.jpg");
+    }
+
+    .md-and-smaller-d-none {
+        display: none !important;
     }
 }
 
