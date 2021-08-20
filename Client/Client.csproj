@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="wwwroot\assets\img\admincards\" />
     <Folder Include="wwwroot\assets\img\skillsicons\" />
     <Folder Include="wwwroot\assets\img\publicbackgrounds\" />
     <Folder Include="wwwroot\assets\docs\" />

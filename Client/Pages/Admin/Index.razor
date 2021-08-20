@@ -1,0 +1,53 @@
+﻿@page "/admin"
+
+<main class="admin-area-main">
+
+	@* Sidebar *@
+
+	<div class="admin-area-content container-fluid bg-white">
+		<div class="row g-0">
+			<div class="col">
+				<h1>Overview</h1>
+				<br />
+				<hr />
+				<br />
+
+				<div class="row">
+					<div class="col-lg-4 p-3 md-and-smaller-my-3">
+						<div class="card shadow">
+							<a href="/admin/categories" class="stretched-link text-white">
+								<img src="assets/img/admincards/categories-card-background.jpg" class="card-img" alt="Overview categories card background" />
+								<div class="card-img-overlay d-flex flex-column">
+									<h1 class="card-title fw-bold">Categories</h1>
+									<h4 class="card-text">3 categories exist.</h4>
+
+									<div class="d-flex align-items-end justify-content-end flex-grow-1">
+										<i class="fas fa-arrow-right ms-4 h1"></i>
+									</div>
+								</div>
+							</a>
+						</div>
+					</div>
+
+					<div class="col-lg-4 p-3 md-and-smaller-my-3">
+						<div class="card shadow">
+							<a href="/admin/posts" class="stretched-link text-white">
+								<img src="assets/img/admincards/posts-card-background.jpg" class="card-img" alt="Overview categories card background" />
+								<div class="card-img-overlay d-flex flex-column">
+									<h1 class="card-title fw-bold">Posts</h1>
+									<h4 class="card-text">6 posts exist.</h4>
+
+									<div class="d-flex align-items-end justify-content-end flex-grow-1">
+										<i class="fas fa-arrow-right ms-4 h1"></i>
+									</div>
+								</div>
+							</a>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+</main>
