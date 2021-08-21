@@ -4,7 +4,7 @@
     }
 }
 
-@media (mmax-width: 767px) {
+@media (max-width: 767px) {
     .admin-area-sidebar {
         width: 75px;
     }
