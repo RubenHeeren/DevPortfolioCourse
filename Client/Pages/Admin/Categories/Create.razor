@@ -1,0 +1,31 @@
+﻿@using System.Net;
+
+@code
+{
+	[Inject] HttpClient HttpClient { get; set; }
+	[Inject] InMemoryDatabaseCache InMemoryDatabaseCache { get; set; }
+	private Category _categoryToCreate = new Category() { ThumbnailImagePath = "uploads/placeholder.jpg", Posts = new List<Post>() };
+	private bool _attemptingToCreate = false;
+	private bool _attemptToCreateFailed = false;
+	private bool _createSuccessful = false;
+	private async Task CreateCategory()
+	{
+		_attemptingToCreate = true;
+
+		HttpResponseMessage response = await HttpClient.PostAsJsonAsync<Category>(APIEndpoints.s_categories, _categoryToCreate);
+
+		if (response.StatusCode == HttpStatusCode.Created)
+		{
+			Category addedCategory = await response.Content.ReadFromJsonAsync<Category>();
+			InMemoryDatabaseCache.Categories.Add(addedCategory);
+
+			_createSuccessful = true;
+		}
+		else
+		{
+			_attemptToCreateFailed = true;
+		}
+
+		_attemptingToCreate = false;
+	}
+}
