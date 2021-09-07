@@ -31,7 +31,7 @@
 
 							<br />
 
-							<InputFile class="form-control mt-4" id="thumbnailImage" />
+							<InputFile OnChange="HandleUploadedImage" class="form-control mt-4" id="thumbnailImage" />
 						</div>
 
 						<div class="form-group mb-5">
@@ -84,5 +84,56 @@
 		}
 
 		_attemptingToCreate = false;
+	}
+
+	private bool _attemptingToUploadImage = false;
+	private bool _attemptToUploadFailed = false;
+	private string _reasonImageUploadFailed = null;
+	private async Task HandleUploadedImage(InputFileChangeEventArgs e)
+	{
+		_attemptingToUploadImage = true;
+
+		if (e.File.ContentType != "image/jpeg" && e.File.ContentType != "image/png")
+		{
+			_reasonImageUploadFailed = "Please only upload JPEG, JPG, or PNG images.";
+			_attemptToUploadFailed = true;
+		}
+		else if (e.File.Size >= 31457280) // 31457280 bytes = 30 megabytes
+		{
+			_reasonImageUploadFailed = "Please only upload images that are smaller than 30 MegaBytes (MB).";
+			_attemptToUploadFailed = true;
+		}
+		else
+		{
+			IBrowserFile uploadedImageFile = e.File;
+
+			byte[] imageAsByteArray = new byte[uploadedImageFile.Size];
+
+			// Fills the contents of the image byte array.
+			await uploadedImageFile.OpenReadStream(31457280).ReadAsync(imageAsByteArray);
+			string byteString = Convert.ToBase64String(imageAsByteArray);
+
+			UploadedImage uploadedImage = new UploadedImage()
+			{
+				NewImageFileExtension = uploadedImageFile.Name.Substring(uploadedImageFile.Name.Length - 4),
+				NewImageBase64Content = byteString,
+				OldImagePath = string.Empty
+			};
+
+			HttpResponseMessage response = await HttpClient.PostAsJsonAsync<UploadedImage>(APIEndpoints.s_imageUpload, uploadedImage); 
+
+			if (response.StatusCode == HttpStatusCode.Created)
+			{
+				_categoryToCreate.ThumbnailImagePath = await response.Content.ReadAsStringAsync();
+			}
+			else
+			{
+				_reasonImageUploadFailed = $"Something went wrong when making a request to the server. Server response code: {response.StatusCode}. Server reason: {response.ReasonPhrase}.";
+				_attemptToUploadFailed = true;
+			}
+		}
+
+		_attemptingToUploadImage = false;
+		StateHasChanged();
 	}
 }

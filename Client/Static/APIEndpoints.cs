@@ -9,5 +9,6 @@
 #endif
 
         internal readonly static string s_categories = $"{ServerBaseUrl}/api/categories";
+        internal readonly static string s_imageUpload = $"{ServerBaseUrl}/api/imageupload";
     }
 }
