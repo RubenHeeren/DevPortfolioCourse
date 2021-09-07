@@ -1,4 +1,61 @@
-﻿@using System.Net;
+﻿@page "/admin/categories/create"
+@using System.Net;
+
+<main class="admin-area-main">
+	<Client.Components.Admin.Sidebar />
+
+	<div class="admin-area-content container-fluid bg-white">
+		<div class="row g-0">
+			<div class="col">
+
+				<h1 class="mb-4">@(_createSuccessful ? "Success! Go back to all categories to see the created category." : "Create category")</h1>
+				
+				@if (_attemptingToCreate == true)
+				{
+					<h1>Creating category...</h1>
+				}
+				else if (_createSuccessful == false && _attemptingToCreate == false)
+				{
+					<EditForm Model="_categoryToCreate" OnValidSubmit="CreateCategory">
+						<DataAnnotationsValidator />
+
+						<div class="form-group mb-5">
+							<label for="categoryName">Category name</label>
+							<InputText @bind-Value="_categoryToCreate.Name" class="form-control" id="categoryName"></InputText>
+						</div>
+
+						<div class="form-group mb-5">
+							<label for="thumbnailImage">Thumbnail image (jpg/jpeg or png 1920x1080)</label>
+
+							<img src="@($"{APIEndpoints.ServerBaseUrl}/{_categoryToCreate.ThumbnailImagePath}")" class="admin-crud-form-thumbnail-image" alt="Post thumbnail image" />
+
+							<br />
+
+							<InputFile class="form-control mt-4" id="thumbnailImage" />
+						</div>
+
+						<div class="form-group mb-5">
+							<label for="categoryDescription">Category description</label>
+							<InputText @bind-Value="_categoryToCreate.Description" class="form-control" id="categoryDescription"></InputText>
+						</div>
+
+						<ValidationSummary />
+
+						<button class="btn btn-success shadow d-block mt-5 md-f-size-1-5" type="submit">
+							<i class="far fa-save"></i> Save
+						</button>
+
+					</EditForm>
+				}
+
+				<a href="/admin/categories" class="btn btn-primary shadow mt-5 md-f-size-1-5">
+					<i class="fas fa-arrow-left"></i> Back to all categories
+				</a>
+			</div>
+		</div>
+	</div>
+</main>
+
 
 @code
 {
