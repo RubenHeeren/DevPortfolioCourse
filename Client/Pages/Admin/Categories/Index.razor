@@ -13,7 +13,7 @@
 				<hr />
 				<br />
 
-				@if (InMemoryDatabaseCache.Categories == null)
+				@if (InMemoryDatabaseCache.Categories == null || _attemptingToDeleteACategory == true)
 				{
 					<LoadingDot />
 				}
@@ -68,7 +68,7 @@
 
 													<br />
 													
-													<button class="btn btn-danger shadow md-f-size-1-5">
+													<button @onclick="(() => DeleteCategory(category))" class="btn btn-danger shadow md-f-size-1-5">
 														<i class="fas fa-trash"></i> Delete
 													</button>
 												</div>
@@ -80,6 +80,24 @@
 						</div>
 					}
 				}
+
+				<div class="position-fixed bottom-0 end-5 z-index-5">					
+
+					@if (_successfullyDeletedACategory == true)
+					{
+						<Toast IsError="false" ToastTitle="Successfully deleted a category."
+							ToastBody="The category has been removed from the database."
+							ParentMethodToCallOnClickBtnClose="() => _successfullyDeletedACategory = false"	/>
+					}
+
+					@if (_unsuccessfullyTriedToDeleteACategory == true)
+					{
+						<Toast IsError="true" ToastTitle="Delete failed."
+							ToastBody="@($"The reason is \"{_reasonUnsuccessfullyTriedToDeleteACategory}\" Please try again and if the issue persists contact the administrator.")"
+							ParentMethodToCallOnClickBtnClose="() => _unsuccessfullyTriedToDeleteACategory = false"	/>
+					}
+
+				</div>
 
 			</div>
 		</div>
