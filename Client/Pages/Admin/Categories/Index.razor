@@ -23,7 +23,7 @@
 						<i class="fas fa-plus"></i> Create category
 					</a>
 
-					<button @onclick="() => InMemoryDatabaseCache.GetCategoriesFromDatabaseAndCache()" class="btn btn-primary shadow md-f-size-1-5">
+					<button @onclick="() => InMemoryDatabaseCache.GetCategoriesFromDatabaseAndCache(true)" class="btn btn-primary shadow md-f-size-1-5">
 						<i class="fas fa-sync"></i> Refresh data
 					</button>
 
@@ -115,7 +115,7 @@
 
 		if (InMemoryDatabaseCache.Categories == null)
 		{
-			await InMemoryDatabaseCache.GetCategoriesFromDatabaseAndCache();
+			await InMemoryDatabaseCache.GetCategoriesFromDatabaseAndCache(true);
 		}
 	}
 
