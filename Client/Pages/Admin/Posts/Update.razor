@@ -1,0 +1,243 @@
+﻿@page "/admin/posts/update/{PostId:int}"
+@using System.Net;
+
+<main class="admin-area-main">
+	<Client.Components.Admin.Sidebar />
+
+	<div class="admin-area-content container-fluid bg-white">
+		<div class="row g-0">
+			<div class="col">
+
+				<h1 class="mb-4">Update post</h1>
+
+				@if (_postToUpdate == null)
+				{
+					<LoadingDot />
+				}
+				else
+				{
+					<EditForm Model="_postToUpdate" OnValidSubmit="UpdatePost">
+						<DataAnnotationsValidator />
+
+						@if (InMemoryDatabaseCache.Categories == null)
+						{
+							<LoadingDot />
+						}
+						else
+						{
+							<div class="form-group mb-5">
+								<label for="postCategory">Category</label>
+								<InputSelect @bind-Value="@_postToUpdate.CategoryId" class="form-control" id="postCategory">
+									@foreach (var category in InMemoryDatabaseCache.Categories)
+									{
+								<option value="@category.CategoryId">@category.Name</option>
+									}
+						</InputSelect>
+					</div>
+						}
+
+						<div class="form-group mb-5">
+							<label for="postTitle">Post title</label>
+							<InputText @bind-Value="_postToUpdate.Title" class="form-control" id="postTitle"></InputText>
+						</div>
+
+						<div class="form-group mb-5">
+							<label for="thumbnailImage">Thumbnail image (jpg/jpeg or png 1920x1080)</label>
+
+							@if (_attemptingToUploadImage == true)
+							{
+								<LoadingDot />
+							}
+							else if (_attemptToUploadFailed == true)
+							{
+								<h4 class="text-danger">Failed to upload image. @_reasonImageUploadFailed</h4>
+							}
+							else
+							{
+								<img src="@($"{APIEndpoints.ServerBaseUrl}/{_postToUpdate.ThumbnailImagePath}")" class="admin-crud-form-thumbnail-image" alt="Post thumbnail image" />
+							}
+
+							<br />
+
+							<InputFile OnChange="HandleUploadedImage" class="form-control mt-4" id="thumbnailImage" />
+						</div>
+
+						<div class="form-group mb-5">
+							<label for="postExcerpt">Post excerpt</label>
+							<InputText @bind-Value="_postToUpdate.Excerpt" class="form-control" id="postExcerpt"></InputText>
+						</div>
+
+						<div class="form-group mb-5 flex-shrink-1">
+							<label>Post content</label>
+							<div @ref="_quillJSEditorDiv" class="border border-secondary p-4"></div>
+						</div>
+
+						<div class="form-group mb-5">
+							<label for="postPublished">Post published</label>
+							<InputCheckbox @bind-Value="@_postToUpdate.Published" class="form-check-input" id="postPublished" aria-describedby="postPublishedHelp" />
+							<div id="postPublishedHelp" class="form-text">
+								The value of this specifies whether this blog post is visible on the user facing site or not.
+								Publishing a blog post also updates the value of the PublishDate field.
+							</div>
+						</div>
+
+						<div class="form-group mb-5">
+							<label for="postAuthor">Post author</label>
+							<InputText @bind-Value="_postToUpdate.Author" class="form-control" id="postAuthor"></InputText>
+						</div>
+
+						<ValidationSummary />
+
+						@if (_attemptingToUpdate == true)
+						{
+							<LoadingDot />
+						}
+						else
+						{
+							<button class="btn btn-success shadow d-block mt-5 md-f-size-1-5" type="submit">
+								<i class="far fa-save"></i> Save
+							</button>
+
+							<a href="/admin/posts" class="btn btn-primary shadow mt-5 md-f-size-1-5">
+								<i class="fas fa-arrow-left"></i> Back to all posts
+							</a>
+						}
+					</EditForm>
+				}
+
+				<div class="position-fized bottom-0 end-5 z-index-5">
+
+					@if (_updateSuccessful == true)
+					{
+						<Toast IsError="false" ToastTitle="Update successful"
+							ToastBody="Your changes have been saved to the database."
+							ParentMethodToCallOnClickBtnClose="() => _updateSuccessful = false" />
+					}
+
+					@if (_attemptToUpdateFailed == true)
+					{
+						<Toast IsError="true" ToastTitle="Update failed"
+							ToastBody="Update failed. Please try again and if the issue persists contact the administrator."
+							ParentMethodToCallOnClickBtnClose="() => _attemptToUpdateFailed = false" />
+					}
+					
+				</div>
+
+			</div>
+		</div>
+	</div>
+</main>
+
+@code
+{
+	[Parameter] public int PostId { get; set; }
+
+	[Inject] InMemoryDatabaseCache InMemoryDatabaseCache { get; set; }
+	[Inject] IJSRuntime JSRuntime { get; set; }
+	private PostDTO _postToUpdate = null;
+	private ElementReference _quillJSEditorDiv;
+	protected async override Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			_postToUpdate = await InMemoryDatabaseCache.GetPostDTOByPostId(PostId);
+
+			if (InMemoryDatabaseCache.Categories == null)
+			{
+				await InMemoryDatabaseCache.GetCategoriesFromDatabaseAndCache(false);				
+			}
+
+			StateHasChanged();
+
+			await JSRuntime.InvokeVoidAsync("QuillFunctions.createQuill", _quillJSEditorDiv, true);
+
+			if (string.IsNullOrEmpty(_postToUpdate.Content) == false)
+			{
+				await JSRuntime.InvokeAsync<object>("QuillFunctions.setQuillContent", _quillJSEditorDiv, _postToUpdate.Content);
+			}
+		}
+	}
+
+	[Inject] HttpClient HttpClient { get; set; }	
+	private bool _attemptingToUpdate = false;
+	private bool _attemptToUpdateFailed = false;
+	private bool _updateSuccessful = false;
+	private async Task UpdatePost()
+	{
+		_attemptingToUpdate = true;
+
+		_postToUpdate.Content = await JSRuntime.InvokeAsync<string>("QuillFunctions.getQuillContent", _quillJSEditorDiv);
+
+		HttpResponseMessage response = await HttpClient.PutAsJsonAsync<PostDTO>($"{APIEndpoints.s_posts}/{_postToUpdate.PostId}", _postToUpdate);
+
+		if (response.StatusCode == HttpStatusCode.Created)
+		{
+			Post updatedPost = await response.Content.ReadFromJsonAsync<Post>();
+
+			Post unupdatedPostInList = await InMemoryDatabaseCache.GetPostByPostId(updatedPost.PostId);
+
+			updatedPost.Category = await InMemoryDatabaseCache.GetCategoryByCategoryId(updatedPost.CategoryId, false);
+
+			UtilityFunctions.CopyObjectProperties(updatedPost, unupdatedPostInList);
+
+			_updateSuccessful = true;
+		}
+		else
+		{
+			_attemptToUpdateFailed = true;
+		}
+
+		_attemptingToUpdate = false;
+	}
+
+	private bool _attemptingToUploadImage = false;
+	private bool _attemptToUploadFailed = false;
+	private string _reasonImageUploadFailed = null;
+	private async Task HandleUploadedImage(InputFileChangeEventArgs e)
+	{
+		_attemptingToUploadImage = true;
+
+		if (e.File.ContentType != "image/jpeg" && e.File.ContentType != "image/png")
+		{
+			_reasonImageUploadFailed = "Please only upload JPEG, JPG, or PNG images.";
+			_attemptToUploadFailed = true;
+		}
+		else if (e.File.Size >= 31457280) // 31457280 bytes = 30 megabytes
+		{
+			_reasonImageUploadFailed = "Please only upload images that are smaller than 30 MegaBytes (MB).";
+			_attemptToUploadFailed = true;
+		}
+		else
+		{
+			IBrowserFile uploadedImageFile = e.File;
+
+			byte[] imageAsByteArray = new byte[uploadedImageFile.Size];
+
+			// Fills the contents of the image byte array.
+			await uploadedImageFile.OpenReadStream(31457280).ReadAsync(imageAsByteArray);
+			string byteString = Convert.ToBase64String(imageAsByteArray);
+
+			UploadedImage uploadedImage = new UploadedImage()
+			{
+				NewImageFileExtension = uploadedImageFile.Name.Substring(uploadedImageFile.Name.Length - 4),
+				NewImageBase64Content = byteString,
+				OldImagePath = string.Empty
+			};
+
+			HttpResponseMessage response = await HttpClient.PostAsJsonAsync<UploadedImage>(APIEndpoints.s_imageUpload, uploadedImage);
+
+			if (response.StatusCode == HttpStatusCode.Created)
+			{
+				_postToUpdate.ThumbnailImagePath = await response.Content.ReadAsStringAsync();
+			}
+			else
+			{
+				_reasonImageUploadFailed = $"Something went wrong when making a request to the server. Server response code: {response.StatusCode}. Server reason: {response.ReasonPhrase}.";
+				_attemptToUploadFailed = true;
+			}
+		}
+
+		_attemptingToUploadImage = false;
+		StateHasChanged();
+	}
+}
