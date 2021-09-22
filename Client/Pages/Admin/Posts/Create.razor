@@ -68,9 +68,9 @@
 							<InputText @bind-Value="_postToCreate.Excerpt" class="form-control" id="postExcerpt"></InputText>
 						</div>
 
-						<div class="form-group mb-5">
-							<label for="postContent">Post content</label>
-							<InputText @bind-Value="_postToCreate.Content" class="form-control" id="postContent"></InputText>
+						<div class="form-group mb-5 flex-shrink-1">
+							<label>Post content</label>
+							<div @ref="_quillJSEditorDiv" class="border border-secondary p-4"></div>
 						</div>
 
 						<div class="form-group mb-5">
@@ -106,8 +106,24 @@
 
 @code
 {
-	[Inject] HttpClient HttpClient { get; set; }
 	[Inject] InMemoryDatabaseCache InMemoryDatabaseCache { get; set; }
+	[Inject] IJSRuntime JsRuntime { get; set; }	
+	private ElementReference _quillJSEditorDiv;
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			if (InMemoryDatabaseCache.Categories == null)
+			{
+				await InMemoryDatabaseCache.GetCategoriesFromDatabaseAndCache(false);
+				StateHasChanged();
+			}
+
+			await JsRuntime.InvokeAsync<string>("QuillFunctions.createQuill", _quillJSEditorDiv, true);
+		}
+	}
+
+	[Inject] HttpClient HttpClient { get; set; }	
 	private PostDTO _postToCreate = new PostDTO() { ThumbnailImagePath = "uploads/placeholder.jpg" };
 	private bool _attemptingToCreate = false;
 	private bool _attemptToCreateFailed = false;
@@ -115,6 +131,8 @@
 	private async Task CreatePost()
 	{
 		_attemptingToCreate = true;
+
+		_postToCreate.Content = await JsRuntime.InvokeAsync<string>("QuillFunctions.getQuillContent", _quillJSEditorDiv);
 
 		HttpResponseMessage response = await HttpClient.PostAsJsonAsync<PostDTO>(APIEndpoints.s_posts, _postToCreate);
 
