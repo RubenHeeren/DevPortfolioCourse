@@ -107,9 +107,9 @@
 @code
 {
 	[Inject] InMemoryDatabaseCache InMemoryDatabaseCache { get; set; }
-	[Inject] IJSRuntime JsRuntime { get; set; }	
+	[Inject] IJSRuntime JSRuntime { get; set; }
 	private ElementReference _quillJSEditorDiv;
-	protected override async Task OnAfterRenderAsync(bool firstRender)
+	protected async override Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (firstRender)
 		{
@@ -119,11 +119,11 @@
 				StateHasChanged();
 			}
 
-			await JsRuntime.InvokeAsync<string>("QuillFunctions.createQuill", _quillJSEditorDiv, true);
+			await JSRuntime.InvokeVoidAsync("QuillFunctions.createQuill", _quillJSEditorDiv, true);
 		}
 	}
 
-	[Inject] HttpClient HttpClient { get; set; }	
+	[Inject] HttpClient HttpClient { get; set; }		
 	private PostDTO _postToCreate = new PostDTO() { ThumbnailImagePath = "uploads/placeholder.jpg" };
 	private bool _attemptingToCreate = false;
 	private bool _attemptToCreateFailed = false;
@@ -132,7 +132,7 @@
 	{
 		_attemptingToCreate = true;
 
-		_postToCreate.Content = await JsRuntime.InvokeAsync<string>("QuillFunctions.getQuillContent", _quillJSEditorDiv);
+		_postToCreate.Content = await JSRuntime.InvokeAsync<string>("QuillFunctions.getQuillContent", _quillJSEditorDiv);
 
 		HttpResponseMessage response = await HttpClient.PostAsJsonAsync<PostDTO>(APIEndpoints.s_posts, _postToCreate);
 
