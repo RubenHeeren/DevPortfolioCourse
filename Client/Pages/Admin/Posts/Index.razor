@@ -172,7 +172,7 @@
 	{
 		_attemptingToDeleteAPost = true;
 
-		HttpResponseMessage response = await HttpClient.DeleteAsync($"{APIEndpoints.s_posts}/{postToDelete.CategoryId}");
+		HttpResponseMessage response = await HttpClient.DeleteAsync($"{APIEndpoints.s_posts}/{postToDelete.PostId}");
 
 		if (response.StatusCode == HttpStatusCode.NoContent)
 		{
