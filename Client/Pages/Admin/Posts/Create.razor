@@ -1,108 +1,115 @@
 ﻿@page "/admin/posts/create"
 @using System.Net;
 
-<main class="admin-area-main">
-	<Client.Components.Admin.Sidebar />
+<AuthorizeView Roles="Administrator">
+	<Authorized Context="Auth">
+		<main class="admin-area-main">
+			<Client.Components.Admin.Sidebar />
 
-	<div class="admin-area-content container-fluid bg-white">
-		<div class="row g-0">
-			<div class="col">
+			<div class="admin-area-content container-fluid bg-white">
+				<div class="row g-0">
+					<div class="col">
 
-				<h1 class="mb-4">@(_createSuccessful ? "Success! Go back to all posts to see the created post." : "Create post")</h1>
+						<h1 class="mb-4">@(_createSuccessful ? "Success! Go back to all posts to see the created post." : "Create post")</h1>
 
-				@if (_attemptingToCreate == true)
-				{
-					<h1>Creating post...</h1>
-					<LoadingDot />
-				}
-				else if (_createSuccessful == false && _attemptingToCreate == false)
-				{
-					<EditForm Model="_postToCreate" OnValidSubmit="CreatePost">
-						<DataAnnotationsValidator />
-
-						@if (InMemoryDatabaseCache.Categories == null)
+						@if (_attemptingToCreate == true)
 						{
+							<h1>Creating post...</h1>
 							<LoadingDot />
 						}
-						else
+						else if (_createSuccessful == false && _attemptingToCreate == false)
 						{
-							<div class="form-group mb-5">
-								<label for="postCategory">Category</label>
-								<InputSelect @bind-Value="@_postToCreate.CategoryId" class="form-control" id="postCategory">
-									@foreach (var category in InMemoryDatabaseCache.Categories)
-									{
+							<EditForm Model="_postToCreate" OnValidSubmit="CreatePost">
+								<DataAnnotationsValidator />
+
+								@if (InMemoryDatabaseCache.Categories == null)
+								{
+									<LoadingDot />
+								}
+								else
+								{
+									<div class="form-group mb-5">
+										<label for="postCategory">Category</label>
+										<InputSelect @bind-Value="@_postToCreate.CategoryId" class="form-control" id="postCategory">
+											@foreach (var category in InMemoryDatabaseCache.Categories)
+											{
 										<option value="@category.CategoryId">@category.Name</option>
-									}
+											}
 								</InputSelect>
 							</div>
+								}
+
+								<div class="form-group mb-5">
+									<label for="postTitle">Post title</label>
+									<InputText @bind-Value="_postToCreate.Title" class="form-control" id="postTitle"></InputText>
+								</div>
+
+								<div class="form-group mb-5">
+									<label for="thumbnailImage">Thumbnail image (jpg/jpeg or png 1920x1080)</label>
+
+									@if (_attemptingToUploadImage == true)
+									{
+										<LoadingDot />
+									}
+									else if (_attemptToUploadFailed == true)
+									{
+										<h4 class="text-danger">Failed to upload image. @_reasonImageUploadFailed</h4>
+									}
+									else
+									{
+										<img src="@($"{APIEndpoints.ServerBaseUrl}/{_postToCreate.ThumbnailImagePath}")" class="admin-crud-form-thumbnail-image" alt="Post thumbnail image" />
+									}
+
+									<br />
+
+									<InputFile OnChange="HandleUploadedImage" class="form-control mt-4" id="thumbnailImage" />
+								</div>
+
+								<div class="form-group mb-5">
+									<label for="postExcerpt">Post excerpt</label>
+									<InputText @bind-Value="_postToCreate.Excerpt" class="form-control" id="postExcerpt"></InputText>
+								</div>
+
+								<div class="form-group mb-5 flex-shrink-1">
+									<label>Post content</label>
+									<div @ref="_quillJSEditorDiv" class="border border-secondary p-4"></div>
+								</div>
+
+								<div class="form-group mb-5">
+									<label for="postPublished">Post published</label>
+									<InputCheckbox @bind-Value="@_postToCreate.Published" class="form-check-input" id="postPublished" aria-describedby="postPublishedHelp" />
+									<div id="postPublishedHelp" class="form-text">
+										The value of this specifies whether this blog post is visible on the user facing site or not.
+										Publishing a blog post also updates the value of the PublishDate field.
+									</div>
+								</div>
+
+								<div class="form-group mb-5">
+									<label for="postAuthor">Post author</label>
+									<InputText @bind-Value="_postToCreate.Author" class="form-control" id="postAuthor"></InputText>
+								</div>
+
+								<ValidationSummary />
+
+								<button class="btn btn-success shadow d-block mt-5 md-f-size-1-5" type="submit">
+									<i class="far fa-save"></i> Save
+								</button>
+
+							</EditForm>
 						}
 
-						<div class="form-group mb-5">
-							<label for="postTitle">Post title</label>
-							<InputText @bind-Value="_postToCreate.Title" class="form-control" id="postTitle"></InputText>
-						</div>
-
-						<div class="form-group mb-5">
-							<label for="thumbnailImage">Thumbnail image (jpg/jpeg or png 1920x1080)</label>
-
-							@if (_attemptingToUploadImage == true)
-							{
-								<LoadingDot />
-							}
-							else if (_attemptToUploadFailed == true)
-							{
-								<h4 class="text-danger">Failed to upload image. @_reasonImageUploadFailed</h4>
-							}
-							else
-							{
-								<img src="@($"{APIEndpoints.ServerBaseUrl}/{_postToCreate.ThumbnailImagePath}")" class="admin-crud-form-thumbnail-image" alt="Post thumbnail image" />
-							}
-
-							<br />
-
-							<InputFile OnChange="HandleUploadedImage" class="form-control mt-4" id="thumbnailImage" />
-						</div>
-
-						<div class="form-group mb-5">
-							<label for="postExcerpt">Post excerpt</label>
-							<InputText @bind-Value="_postToCreate.Excerpt" class="form-control" id="postExcerpt"></InputText>
-						</div>
-
-						<div class="form-group mb-5 flex-shrink-1">
-							<label>Post content</label>
-							<div @ref="_quillJSEditorDiv" class="border border-secondary p-4"></div>
-						</div>
-
-						<div class="form-group mb-5">
-							<label for="postPublished">Post published</label>
-							<InputCheckbox @bind-Value="@_postToCreate.Published" class="form-check-input" id="postPublished" aria-describedby="postPublishedHelp" />
-							<div id="postPublishedHelp" class="form-text">
-								The value of this specifies whether this blog post is visible on the user facing site or not.
-								Publishing a blog post also updates the value of the PublishDate field.
-							</div>
-						</div>
-
-						<div class="form-group mb-5">
-							<label for="postAuthor">Post author</label>
-							<InputText @bind-Value="_postToCreate.Author" class="form-control" id="postAuthor"></InputText>
-						</div>
-
-						<ValidationSummary />
-
-						<button class="btn btn-success shadow d-block mt-5 md-f-size-1-5" type="submit">
-							<i class="far fa-save"></i> Save
-						</button>
-
-					</EditForm>
-				}
-
-				<a href="/admin/posts" class="btn btn-primary shadow mt-5 md-f-size-1-5">
-					<i class="fas fa-arrow-left"></i> Back to all posts
-				</a>
+						<a href="/admin/posts" class="btn btn-primary shadow mt-5 md-f-size-1-5">
+							<i class="fas fa-arrow-left"></i> Back to all posts
+						</a>
+					</div>
+				</div>
 			</div>
-		</div>
-	</div>
-</main>
+		</main>
+	</Authorized>
+	<NotAuthorized>
+		<Client.Components.Admin.SignIn />
+	</NotAuthorized>
+</AuthorizeView>
 
 @code
 {
@@ -123,7 +130,7 @@
 		}
 	}
 
-	[Inject] HttpClient HttpClient { get; set; }		
+	[Inject] HttpClient HttpClient { get; set; }
 	private PostDTO _postToCreate = new PostDTO() { ThumbnailImagePath = "uploads/placeholder.jpg" };
 	private bool _attemptingToCreate = false;
 	private bool _attemptToCreateFailed = false;

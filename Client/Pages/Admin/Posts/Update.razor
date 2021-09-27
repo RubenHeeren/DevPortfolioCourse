@@ -1,132 +1,139 @@
 ﻿@page "/admin/posts/update/{PostId:int}"
 @using System.Net;
 
-<main class="admin-area-main">
-	<Client.Components.Admin.Sidebar />
+<AuthorizeView Roles="Administrator">
+	<Authorized Context="Auth">
+		<main class="admin-area-main">
+			<Client.Components.Admin.Sidebar />
 
-	<div class="admin-area-content container-fluid bg-white">
-		<div class="row g-0">
-			<div class="col">
+			<div class="admin-area-content container-fluid bg-white">
+				<div class="row g-0">
+					<div class="col">
 
-				<h1 class="mb-4">Update post</h1>
+						<h1 class="mb-4">Update post</h1>
 
-				@if (_postToUpdate == null)
-				{
-					<LoadingDot />
-				}
-				else
-				{
-					<EditForm Model="_postToUpdate" OnValidSubmit="UpdatePost">
-						<DataAnnotationsValidator />
-
-						@if (InMemoryDatabaseCache.Categories == null)
+						@if (_postToUpdate == null)
 						{
 							<LoadingDot />
 						}
 						else
 						{
-							<div class="form-group mb-5">
-								<label for="postCategory">Category</label>
-								<InputSelect @bind-Value="@_postToUpdate.CategoryId" class="form-control" id="postCategory">
-									@foreach (var category in InMemoryDatabaseCache.Categories)
-									{
-								<option value="@category.CategoryId">@category.Name</option>
-									}
-						</InputSelect>
-					</div>
-						}
+							<EditForm Model="_postToUpdate" OnValidSubmit="UpdatePost">
+								<DataAnnotationsValidator />
 
-						<div class="form-group mb-5">
-							<label for="postTitle">Post title</label>
-							<InputText @bind-Value="_postToUpdate.Title" class="form-control" id="postTitle"></InputText>
-						</div>
-
-						<div class="form-group mb-5">
-							<label for="thumbnailImage">Thumbnail image (jpg/jpeg or png 1920x1080)</label>
-
-							@if (_attemptingToUploadImage == true)
-							{
-								<LoadingDot />
-							}
-							else if (_attemptToUploadFailed == true)
-							{
-								<h4 class="text-danger">Failed to upload image. @_reasonImageUploadFailed</h4>
-							}
-							else
-							{
-								<img src="@($"{APIEndpoints.ServerBaseUrl}/{_postToUpdate.ThumbnailImagePath}")" class="admin-crud-form-thumbnail-image" alt="Post thumbnail image" />
-							}
-
-							<br />
-
-							<InputFile OnChange="HandleUploadedImage" class="form-control mt-4" id="thumbnailImage" />
-						</div>
-
-						<div class="form-group mb-5">
-							<label for="postExcerpt">Post excerpt</label>
-							<InputText @bind-Value="_postToUpdate.Excerpt" class="form-control" id="postExcerpt"></InputText>
-						</div>
-
-						<div class="form-group mb-5 flex-shrink-1">
-							<label>Post content</label>
-							<div @ref="_quillJSEditorDiv" class="border border-secondary p-4"></div>
-						</div>
-
-						<div class="form-group mb-5">
-							<label for="postPublished">Post published</label>
-							<InputCheckbox @bind-Value="@_postToUpdate.Published" class="form-check-input" id="postPublished" aria-describedby="postPublishedHelp" />
-							<div id="postPublishedHelp" class="form-text">
-								The value of this specifies whether this blog post is visible on the user facing site or not.
-								Publishing a blog post also updates the value of the PublishDate field.
+								@if (InMemoryDatabaseCache.Categories == null)
+								{
+									<LoadingDot />
+								}
+								else
+								{
+									<div class="form-group mb-5">
+										<label for="postCategory">Category</label>
+										<InputSelect @bind-Value="@_postToUpdate.CategoryId" class="form-control" id="postCategory">
+											@foreach (var category in InMemoryDatabaseCache.Categories)
+											{
+										<option value="@category.CategoryId">@category.Name</option>
+											}
+								</InputSelect>
 							</div>
+								}
+
+								<div class="form-group mb-5">
+									<label for="postTitle">Post title</label>
+									<InputText @bind-Value="_postToUpdate.Title" class="form-control" id="postTitle"></InputText>
+								</div>
+
+								<div class="form-group mb-5">
+									<label for="thumbnailImage">Thumbnail image (jpg/jpeg or png 1920x1080)</label>
+
+									@if (_attemptingToUploadImage == true)
+									{
+										<LoadingDot />
+									}
+									else if (_attemptToUploadFailed == true)
+									{
+										<h4 class="text-danger">Failed to upload image. @_reasonImageUploadFailed</h4>
+									}
+									else
+									{
+										<img src="@($"{APIEndpoints.ServerBaseUrl}/{_postToUpdate.ThumbnailImagePath}")" class="admin-crud-form-thumbnail-image" alt="Post thumbnail image" />
+									}
+
+									<br />
+
+									<InputFile OnChange="HandleUploadedImage" class="form-control mt-4" id="thumbnailImage" />
+								</div>
+
+								<div class="form-group mb-5">
+									<label for="postExcerpt">Post excerpt</label>
+									<InputText @bind-Value="_postToUpdate.Excerpt" class="form-control" id="postExcerpt"></InputText>
+								</div>
+
+								<div class="form-group mb-5 flex-shrink-1">
+									<label>Post content</label>
+									<div @ref="_quillJSEditorDiv" class="border border-secondary p-4"></div>
+								</div>
+
+								<div class="form-group mb-5">
+									<label for="postPublished">Post published</label>
+									<InputCheckbox @bind-Value="@_postToUpdate.Published" class="form-check-input" id="postPublished" aria-describedby="postPublishedHelp" />
+									<div id="postPublishedHelp" class="form-text">
+										The value of this specifies whether this blog post is visible on the user facing site or not.
+										Publishing a blog post also updates the value of the PublishDate field.
+									</div>
+								</div>
+
+								<div class="form-group mb-5">
+									<label for="postAuthor">Post author</label>
+									<InputText @bind-Value="_postToUpdate.Author" class="form-control" id="postAuthor"></InputText>
+								</div>
+
+								<ValidationSummary />
+
+								@if (_attemptingToUpdate == true)
+								{
+									<LoadingDot />
+								}
+								else
+								{
+									<button class="btn btn-success shadow d-block mt-5 md-f-size-1-5" type="submit">
+										<i class="far fa-save"></i> Save
+									</button>
+
+									<a href="/admin/posts" class="btn btn-primary shadow mt-5 md-f-size-1-5">
+										<i class="fas fa-arrow-left"></i> Back to all posts
+									</a>
+								}
+							</EditForm>
+						}
+
+						<div class="position-fized bottom-0 end-5 z-index-5">
+
+							@if (_updateSuccessful == true)
+							{
+								<Toast IsError="false" ToastTitle="Update successful"
+								   ToastBody="Your changes have been saved to the database."
+								   ParentMethodToCallOnClickBtnClose="() => _updateSuccessful = false" />
+							}
+
+							@if (_attemptToUpdateFailed == true)
+							{
+								<Toast IsError="true" ToastTitle="Update failed"
+								   ToastBody="Update failed. Please try again and if the issue persists contact the administrator."
+								   ParentMethodToCallOnClickBtnClose="() => _attemptToUpdateFailed = false" />
+							}
+
 						</div>
 
-						<div class="form-group mb-5">
-							<label for="postAuthor">Post author</label>
-							<InputText @bind-Value="_postToUpdate.Author" class="form-control" id="postAuthor"></InputText>
-						</div>
-
-						<ValidationSummary />
-
-						@if (_attemptingToUpdate == true)
-						{
-							<LoadingDot />
-						}
-						else
-						{
-							<button class="btn btn-success shadow d-block mt-5 md-f-size-1-5" type="submit">
-								<i class="far fa-save"></i> Save
-							</button>
-
-							<a href="/admin/posts" class="btn btn-primary shadow mt-5 md-f-size-1-5">
-								<i class="fas fa-arrow-left"></i> Back to all posts
-							</a>
-						}
-					</EditForm>
-				}
-
-				<div class="position-fized bottom-0 end-5 z-index-5">
-
-					@if (_updateSuccessful == true)
-					{
-						<Toast IsError="false" ToastTitle="Update successful"
-							ToastBody="Your changes have been saved to the database."
-							ParentMethodToCallOnClickBtnClose="() => _updateSuccessful = false" />
-					}
-
-					@if (_attemptToUpdateFailed == true)
-					{
-						<Toast IsError="true" ToastTitle="Update failed"
-							ToastBody="Update failed. Please try again and if the issue persists contact the administrator."
-							ParentMethodToCallOnClickBtnClose="() => _attemptToUpdateFailed = false" />
-					}
-					
+					</div>
 				</div>
-
 			</div>
-		</div>
-	</div>
-</main>
+		</main>
+	</Authorized>
+	<NotAuthorized>
+		<Client.Components.Admin.SignIn />
+	</NotAuthorized>
+</AuthorizeView>
 
 @code
 {
@@ -144,7 +151,7 @@
 
 			if (InMemoryDatabaseCache.Categories == null)
 			{
-				await InMemoryDatabaseCache.GetCategoriesFromDatabaseAndCache(false);				
+				await InMemoryDatabaseCache.GetCategoriesFromDatabaseAndCache(false);
 			}
 
 			StateHasChanged();
@@ -158,7 +165,7 @@
 		}
 	}
 
-	[Inject] HttpClient HttpClient { get; set; }	
+	[Inject] HttpClient HttpClient { get; set; }
 	private bool _attemptingToUpdate = false;
 	private bool _attemptToUpdateFailed = false;
 	private bool _updateSuccessful = false;
