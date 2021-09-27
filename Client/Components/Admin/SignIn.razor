@@ -1,0 +1,94 @@
+﻿@using Blazored.LocalStorage
+@using Client.Providers
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Net.Http.Headers
+
+<div class="d-flex w-100 min-vh-90 justify-content-center align-items-center">
+	<div class="row">
+		<div class="col shadow-no-hover p-5">
+			@if (_signInSuccessful == true)
+			{
+				<h3 class="text-center my-3">Sign in successful. You should be redirected automatically in a few seconds.</h3>
+			}
+			else
+			{
+				<h3 class="text-center fw-bold">You must be signed in to access the admin area.</h3>
+				<h5 class="text-center mt-2 mb-5">After signing in you'll be remembered for 4 weeks.</h5>
+
+				<EditForm Model="_user" OnValidSubmit="SignInUser">
+					<DataAnnotationsValidator />
+
+					<div class="form-group my-3">
+						<label for="email">Email address</label>
+						<InputText @bind-Value="_user.EmailAddress" id="email" class="form-control" />
+						<ValidationMessage For="@(() => _user.EmailAddress)" />
+					</div>
+
+					<div class="form-group my-3">
+						<label for="password">Password</label>
+						<InputText @bind-Value="_user.Password" id="password" type="password" class="form-control" />
+						<ValidationMessage For="@(() => _user.Password)" />
+					</div>
+
+					<ValidationSummary />
+
+					<button type="submit" class="btn btn-primary shadow w-100 md-f-size-1-5">
+						Sign in
+					</button>
+				</EditForm>
+			}
+		</div>
+	</div>
+</div>
+
+<div class="position-fized bottom-0 end-5 z-index-5">
+
+	@if (_signInSuccessful == true)
+	{
+		<Toast IsError="false" ToastTitle="Sign in successful"
+		   ToastBody="You should be redirected automatically within a few seconds."
+		   ParentMethodToCallOnClickBtnClose="() => _signInSuccessful = false" />
+	}
+
+	@if (_signInAttemptFailed == true)
+	{
+		<Toast IsError="true" ToastTitle="Sign in attempt failed"
+		   ToastBody="Please try again and if the issue persists contact the administrator."
+		   ParentMethodToCallOnClickBtnClose="() => _signInAttemptFailed = false" />
+	}
+
+</div>
+
+@code
+{
+	[Inject] HttpClient HttpClient { get; set; }
+	[Inject] ILocalStorageService LocalStorageService { get; set; }
+	[Inject] AuthenticationStateProvider AuthenticationStateProvider { get; set; }
+	[Inject] NavigationManager NavigationManager { get; set; }
+	private bool _signInAttemptFailed = false;
+	private bool _signInSuccessful = false;
+	private User _user = new();
+	private async Task SignInUser()
+	{
+		var response = await HttpClient.PostAsJsonAsync<User>(APIEndpoints.s_signIn, _user);
+
+		if (response.IsSuccessStatusCode == false)
+		{
+			_signInAttemptFailed = true;
+		}
+		else
+		{
+			string JSONWebToken = await response.Content.ReadAsStringAsync();
+
+			await LocalStorageService.SetItemAsync("bearerToken", JSONWebToken);
+
+			await ((AppAuthenticationStateProvider)AuthenticationStateProvider).SignIn();
+
+			HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("bearer", JSONWebToken);
+
+			_signInSuccessful = true;
+
+			NavigationManager.NavigateTo("/admin");
+		}
+	}
+}

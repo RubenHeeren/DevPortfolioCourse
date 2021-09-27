@@ -24,7 +24,7 @@ public class AppAuthenticationStateProvider : AuthenticationStateProvider
     {
         try
         {
-            string savedToken = await _localStorageService.GetItemAsStringAsync(LocalStorageBearerTokenKeyName);
+            string savedToken = await _localStorageService.GetItemAsync<string>(LocalStorageBearerTokenKeyName);
 
             if (string.IsNullOrWhiteSpace(savedToken))
             {
@@ -53,7 +53,7 @@ public class AppAuthenticationStateProvider : AuthenticationStateProvider
 
     internal async Task SignIn()
     {
-        string savedToken = await _localStorageService.GetItemAsStringAsync(LocalStorageBearerTokenKeyName);
+        string savedToken = await _localStorageService.GetItemAsync<string>(LocalStorageBearerTokenKeyName);
 
         JwtSecurityToken jwtSecurityToken = _jwtSecurityTokenHandler.ReadJwtToken(savedToken);
 
