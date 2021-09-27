@@ -1,4 +1,26 @@
-﻿<nav class="navbar nav-underline navbar-expand-lg d-flex flex-wrap navbar-light shadow-no-hover justify-content-between align-items-center pb-lg-3">
+﻿@using Blazored.LocalStorage
+@using Client.Providers
+@using System.Net.Http.Headers
+
+<header>
+
+    <AuthorizeView Roles="Administrator">
+        <Authorized Context="Auth">
+            <div class="shadow-no-hover bg-light p-3">
+                <p class="d-inline ms-lg-5">You're seeing this bar because you're signed in as the administrator</p>
+
+                <a href="/admin" class="btn bg-lightgray hover-bg-white shadow text-dark ms-3 mx-2 md-and-smaller-my-3">
+                    <i class="fas fa-wrench"></i> <p class="md-and-smaller-d-none d-inline">Admin area</p>
+				</a>
+
+                <button @onclick="SignOut" class="btn bg-lightgray hover-bg-white shadow text-dark mx-2 md-and-smaller-my-3">
+                    <i class="fas fa-sign-out-alt"></i> <p class="md-and-smaller-d-none d-inline">Sign out</p>
+				</button>
+			</div>
+		</Authorized>
+	</AuthorizeView>
+
+    <nav class="navbar nav-underline navbar-expand-lg d-flex flex-wrap navbar-light shadow-no-hover justify-content-between align-items-center pb-lg-3">
     <a href="/" class="navbar-brand md-f-size-1-5 text-dark ps-2 m-0 mx-lg-5 fw-bold">
         John Doe<span class="text-dark fw-normal"> &#8211; .NET Developer</span>
     </a>
@@ -47,9 +69,43 @@
         </ul>
     </div>
 </nav>
+</header>
+
+
 
 @code 
 {
+    protected override async Task OnInitializedAsync() => await SignInWithBrowserLocalStorageBearerToken();
+
+    [Inject] HttpClient HttpClient { get; set; }
+    [Inject] AuthenticationStateProvider AuthenticationStateProvider { get; set; }
+    [Inject] ILocalStorageService LocalStorageService { get; set; }
+    private async Task SignInWithBrowserLocalStorageBearerToken()
+    {
+        if (await LocalStorageService.ContainKeyAsync("bearerToken"))
+        {
+            string savedToken = await LocalStorageService.GetItemAsync<string>("bearerToken");
+
+            await ((AppAuthenticationStateProvider)AuthenticationStateProvider).SignIn();
+
+			HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("bearer", savedToken);
+
+            StateHasChanged();
+        }        
+    }
+
+    private async Task SignOut()
+    {
+        if (await LocalStorageService.ContainKeyAsync("bearerToken"))
+        {
+            await LocalStorageService.RemoveItemAsync("bearerToken");
+
+            ((AppAuthenticationStateProvider)AuthenticationStateProvider).SignOut();
+
+            StateHasChanged();
+        }
+    }
+
     // Public and CamelCase because C# properties are methods.
     [Inject] public NavigationManager NavigationManager { get; set; }
 
