@@ -1,4 +1,6 @@
+using Client.Providers;
 using Client.Services;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
@@ -15,6 +17,10 @@ namespace Client
 
             builder.Services.AddSingleton<HttpClient>();
             builder.Services.AddSingleton<InMemoryDatabaseCache>();
+
+            builder.Services.AddScoped<AppAuthenticationStateProvider>();
+            builder.Services.AddScoped<AuthenticationStateProvider>(provider => 
+                provider.GetRequiredService<AppAuthenticationStateProvider>());
 
             await builder.Build().RunAsync();
         }
