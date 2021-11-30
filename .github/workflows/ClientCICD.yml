@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - master
+    paths:
+      - 'Client/**'
+      - 'Shared/**'
+      - '.github/workflows/ClientCICD.yml'
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
