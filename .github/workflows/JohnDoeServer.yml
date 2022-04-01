@@ -2,7 +2,7 @@ name: Build and deploy .NET Core application to Web App JohnDoeServer
 on:
   push:
     branches:
-    - dotnet-6-release-update
+    - master
 env:
   AZURE_WEBAPP_NAME: JohnDoeServer
   AZURE_WEBAPP_PACKAGE_PATH: Server\publish
