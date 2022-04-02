@@ -8,8 +8,18 @@ using Server.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<AppDBContext>(options => options.UseSqlite(
-    builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy",
+        builder =>
+        builder
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader());
+});
+
+builder.Services.AddDbContext<AppDBContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -17,16 +27,14 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
-
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddNewtonsoftJson(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage();    
+    app.UseDeveloperExceptionPage();
 }
 
 app.UseSwagger();
@@ -37,10 +45,10 @@ app.UseSwaggerUI(swaggerUIOptions =>
 });
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseCors("CorsPolicy");
 
 app.UseAuthorization();
 

@@ -1,0 +1,87 @@
+﻿@page "/portfolio"
+
+<Client.Components.Public.Shared.Navbar />
+
+@if (_showingExamplePortfolioProjectModalWindow == true)
+{
+    <Client.Components.Public.Portfolio.ExamplePortfolioProjectModalWindow ParentMethodToCallOnClickBtnClose="() => _showingExamplePortfolioProjectModalWindow = false" />
+}
+
+<main class="container min-vh-90 py-5">
+    <div class="row">
+        <div class="col">
+            <h1 class="mt-3">Portfolio</h1>
+
+            <p>On this page you can view the commercial-grade projects I have completed.</p>
+
+            <div class="row mt-4">
+                <div class="col-md-4 my-2">
+                    <div class="card shadow">
+                        <img src="assets/img/publicbackgrounds/bg-motherboard.jpg" alt="Portfolio project thumbnail image" />
+
+                        <div class="card-body">
+                            <h3 class="card-title fw-bold">My First Project</h3>
+                            <p class="card-text">
+                                @(String.Join(" ", _exampleExcerpt.Split().Take(43).ToArray()))...
+                            </p>
+                        </div>
+
+                        <button @onclick="() => _showingExamplePortfolioProjectModalWindow = true" class="btn btn-primary stretched-link">
+                            <i class="fas fa-info-circle"></i> More information
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-md-4 my-2">
+                    <div class="card shadow">
+                        <img src="assets/img/publicbackgrounds/bg-motherboard.jpg" alt="Portfolio project thumbnail image" />
+
+                        <div class="card-body">
+                            <h3 class="card-title fw-bold">My First Project</h3>
+                            <p class="card-text">
+                                @(String.Join(" ", _exampleExcerpt.Split().Take(43).ToArray()))...
+                            </p>
+                        </div>
+
+                        <button @onclick="() => _showingExamplePortfolioProjectModalWindow = true" class="btn btn-primary stretched-link">
+                            <i class="fas fa-info-circle"></i> More information
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-md-4 my-2">
+                    <div class="card shadow">
+                        <img src="assets/img/publicbackgrounds/bg-motherboard.jpg" alt="Portfolio project thumbnail image" />
+
+                        <div class="card-body">
+                            <h3 class="card-title fw-bold">My First Project</h3>    
+                            <p class="card-text">
+                                @(String.Join(" ", _exampleExcerpt.Split().Take(43).ToArray()))...
+                            </p>
+                        </div>
+
+                        <button @onclick="() => _showingExamplePortfolioProjectModalWindow = true" class="btn btn-primary stretched-link">
+                            <i class="fas fa-info-circle"></i> More information
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<Client.Components.Public.Shared.Footer />
+
+@code
+{
+    private bool _showingExamplePortfolioProjectModalWindow = false;
+
+    private string _exampleExcerpt = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi gravida eget tellus nec ornare." +
+                                    " Mauris ac nisi sit amet erat feugiat consequat id sit amet erat. Integer at erat vitae est volutpat gravida sit amet nec velit." + 
+                                    " Phasellus et faucibus ex, id feugiat mi. Etiam justo est, sodales nec convallis non, pulvinar in nulla." + 
+                                    " Proin sed rutrum neque, ut posuere est. Pellentesque consequat nunc sit amet libero tempus, vitae lacinia est fringilla." + 
+                                    " Fusce ullamcorper pellentesque pulvinar. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus." + 
+                                    " tempus nisl et tellus efficitur, ac facilisis sapien tristique. Etiam interdum nisl nec aliquet semper." + 
+                                    " Curabitur sagittis leo enim, sit amet pretium nisi facilisis id. Donec non maximus nulla, vel dapibus urna." +
+                                    " Aenean a lectus nibh. Nullam luctus vel magna id fermentum.";
+}

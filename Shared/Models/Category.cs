@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace Shared.Models
 {
@@ -18,5 +19,7 @@ namespace Shared.Models
         [Required]
         [MaxLength(1024)]
         public string Description { get; set; }
+
+        public List<Post> Posts { get; set; }
     }
 }
