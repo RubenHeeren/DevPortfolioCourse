@@ -1,0 +1,19 @@
+﻿@media (min-width: 768px) {
+    .admin-area-sidebar {
+        width: 200px;
+    }
+}
+
+@media (max-width: 767px) {
+    .admin-area-sidebar {
+        width: 75px;
+    }
+}
+
+.nav-pills .nav-link {
+    border-radius: 0px;
+}
+
+.nav-pills .nav-link:hover {
+    background-color: #115dce;
+}

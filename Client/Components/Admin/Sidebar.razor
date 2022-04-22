@@ -1,0 +1,69 @@
+﻿<div class="admin-area-sidebar bg-dark d-flex flex-column flex-shrink-0 p-3">
+    <a href="/" class="btn bg-lightgray hover-bg-white text-dark my-4 shadow">
+        <i class="fas fa-eye"></i> <p class="md-and-smaller-d-none d-inline">Public site</p>
+	</a>
+
+    <hr class="my-4 text-white" />
+
+    <ul class="nav nav-pills mb-auto">
+        <li class="nav-item w-100">
+            <a href="@AdminIndexPageUri" class="nav-link w-100 text-center shadow @(IsPageActive(AdminIndexPageUri) ? "active" : "text-white")">
+                <i class="fas fa-home"></i><p class="md-and-smaller-d-none d-inline"> Overview</p>
+			</a>
+		</li>
+
+        <li class="nav-item w-100 mt-4">
+            <a href="@s_adminCategoriesPageUri" class="nav-link w-100 text-center shadow @(IsPageActive(s_adminCategoriesPageUri) ? "active" : "text-white")">
+                <i class="fas fa-th"></i><p class="md-and-smaller-d-none d-inline"> Categories</p>
+			</a>
+		</li>
+
+        <li class="nav-item w-100 mt-4">
+            <a href="@s_adminPostsPageUri" class="nav-link w-100 text-center shadow @(IsPageActive(s_adminPostsPageUri) ? "active" : "text-white")">
+                <i class="fas fa-newspaper"></i><p class="md-and-smaller-d-none d-inline"> Blog posts</p>
+			</a>
+		</li>
+	</ul>
+</div>
+
+@code 
+{
+	[Inject] NavigationManager NavigationManager { get; set; }
+
+	private const string AdminIndexPageUri = "/admin";
+	private static string s_adminCategoriesPageUri = $"{AdminIndexPageUri}/categories";
+	private static string s_adminPostsPageUri = $"{AdminIndexPageUri}/posts";
+
+	private bool IsPageActive(string pageToCheckUri)
+    {
+        // Skip(2) to remove https://.
+        string[] currentUriSplitBetweenSlashes = NavigationManager.Uri.Split('/').Skip(2).ToArray();
+
+        if (pageToCheckUri == AdminIndexPageUri)
+        {
+            if (currentUriSplitBetweenSlashes.Last() == "admin")
+            {
+                return true;
+            }
+        }
+        else
+        {
+            // Skip(2) to remove the starting slash and the admin
+            string[] pageToCheckUriSplitBetweenSlashes = pageToCheckUri.Split('/').Skip(2).ToArray();
+
+            foreach (string currentUriPart in currentUriSplitBetweenSlashes)
+            {
+                foreach (string pageToCheckUriPart in pageToCheckUriSplitBetweenSlashes)
+                {
+                    if (pageToCheckUriPart == currentUriPart)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // If the code gets here pageToCheckUri is not the active page. So return false.
+        return false;
+    }
+}

@@ -1,11 +1,13 @@
-﻿<div class="card shadow mb-2">
+﻿<div class="card shadow mb-4">
     <img src="@($"{APIEndpoints.ServerBaseUrl}/{Category.ThumbnailImagePath}")" class="card-img-top" alt="Category thumbnail image" />
     <div class="card-body">
         <h3 class="card-title">@Category.Name</h3>
         <p class="card-text">@Category.Description</p>
     </div>
 
-    <a href="/" class="btn btn-primary stretched-link">View posts</a>
+    <a href="@($"/blog/{Category.Name.ConvertTitleToURL().ToLowerInvariant()}")" class="btn btn-primary stretched-link md-f-size-1-5">
+        <i class="fas fa-mail-bulk"></i> View posts
+    </a>
 </div>
 
 @code

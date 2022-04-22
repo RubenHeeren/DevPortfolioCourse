@@ -1,0 +1,185 @@
+﻿@page "/admin/categories"
+@using System.Net
+
+<main class="admin-area-main">
+
+	<Client.Components.Admin.Sidebar />
+
+	<div class="admin-area-content container-fluid bg-white">
+		<div class="row g-0">
+			<div class="col">
+				<h1>Categories</h1>
+				<br />
+				<hr />
+				<br />
+
+				@if (InMemoryDatabaseCache.Categories == null || _attemptingToDeleteACategory == true)
+				{
+					<LoadingDot />
+				}
+				else
+				{					
+					<a href="/admin/categories/create" class="btn btn-success shadow me-5 md-f-size-1-5">
+						<i class="fas fa-plus"></i> Create category
+					</a>
+
+					<button @onclick="() => InMemoryDatabaseCache.GetCategoriesFromDatabaseAndCache(true)" class="btn btn-primary shadow md-f-size-1-5">
+						<i class="fas fa-sync"></i> Refresh data
+					</button>
+
+					<br />
+					<br />
+					<br />
+
+					@if (InMemoryDatabaseCache.Categories.Count < 1)
+					{
+						<h1>No categories found. Please create one.</h1>
+					}
+					else
+					{
+						<div class="table-responsive">
+							<table class="table table-striped table-bordered table-sm">
+								<thead>
+									<tr>
+										<th scope="col">Name</th>
+										<th scope="col">Thumbnail</th>
+										<th scope="col">Description</th>
+										<th scope="col">Actions</th>
+									</tr>
+								</thead>
+								<tbody>
+									@foreach (var category in InMemoryDatabaseCache.Categories)
+									{
+										<tr>
+											<th class="w-15" scope="row">
+												<p>@category.Name</p>
+											</th>
+											<td class="w-35">
+												<img src="@($"{APIEndpoints.ServerBaseUrl}/{category.ThumbnailImagePath}")" class="admin-index-thumbnail-image" alt="Category thumbnail image" />
+											</td>
+											<td class="w-15">
+												<p>@category.Description</p>
+											</td>
+											<td class="w-35">
+												<div class="d-flex flex-column">
+													<a href="/admin/categories/update/@category.CategoryId" class="btn btn-update shadow md-f-size-1-5">
+														<i class="fas fa-edit"></i> Update
+													</a>
+
+													<br />
+													
+													<button @onclick="(() => DeleteCategory(category))" class="btn btn-danger shadow md-f-size-1-5">
+														<i class="fas fa-trash"></i> Delete
+													</button>
+												</div>
+											</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+					}
+				}
+
+				<div class="position-fixed bottom-0 end-5 z-index-5">					
+
+					@if (_successfullyDeletedACategory == true)
+					{
+						<Toast IsError="false" ToastTitle="Successfully deleted a category."
+							ToastBody="The category has been removed from the database."
+							ParentMethodToCallOnClickBtnClose="() => _successfullyDeletedACategory = false"	/>
+					}
+
+					@if (_unsuccessfullyTriedToDeleteACategory == true)
+					{
+						<Toast IsError="true" ToastTitle="Delete failed."
+							ToastBody="@($"The reason is \"{_reasonUnsuccessfullyTriedToDeleteACategory}\" Please try again and if the issue persists contact the administrator.")"
+							ParentMethodToCallOnClickBtnClose="() => _unsuccessfullyTriedToDeleteACategory = false"	/>
+					}
+
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+</main>
+
+@implements IDisposable
+@code
+{
+	[Inject] InMemoryDatabaseCache InMemoryDatabaseCache { get; set;  }
+	protected override async Task OnInitializedAsync()
+	{
+		InMemoryDatabaseCache.OnCategoriesDataChanged += StateHasChanged;
+
+		if (InMemoryDatabaseCache.Categories == null)
+		{
+			await InMemoryDatabaseCache.GetCategoriesFromDatabaseAndCache(true);
+		}
+	}
+
+	public void Dispose() => InMemoryDatabaseCache.OnCategoriesDataChanged -= StateHasChanged;
+
+	[Inject] HttpClient HttpClient { get; set; }
+	private bool _attemptingToDeleteACategory = false;
+	private bool _successfullyDeletedACategory = false;
+	private bool _unsuccessfullyTriedToDeleteACategory = false;
+	private string _reasonUnsuccessfullyTriedToDeleteACategory = null;
+	private async void DeleteCategory(Category categoryToDelete)
+	{
+		if (categoryToDelete.Posts != null && categoryToDelete.Posts.Count != 0)
+		{
+			string postTitlesThatMustBeDeletedFirst = string.Empty;
+
+			for (int i = 0; i < categoryToDelete.Posts.Count; i++)
+			{
+				if (i == categoryToDelete.Posts.Count - 1)
+				{
+					// Last iteration
+					postTitlesThatMustBeDeletedFirst += $"\"{categoryToDelete.Posts[i].Title}\"";
+				}
+				else if (i == categoryToDelete.Posts.Count - 2)
+				{
+					// Second last iteration
+					postTitlesThatMustBeDeletedFirst += $"\"{categoryToDelete.Posts[i].Title}\" and ";
+				}
+				else
+				{
+					// Other iterations
+					postTitlesThatMustBeDeletedFirst += $"\"{categoryToDelete.Posts[i].Title}\", ";
+				}
+			}
+
+			_reasonUnsuccessfullyTriedToDeleteACategory = $"The category still has posts in it. Please delete the posts titled {postTitlesThatMustBeDeletedFirst} first.";
+			_unsuccessfullyTriedToDeleteACategory = true;
+		}
+		else
+		{
+			_attemptingToDeleteACategory = true;
+
+			HttpResponseMessage response = await HttpClient.DeleteAsync($"{APIEndpoints.s_categories}/{categoryToDelete.CategoryId}");
+
+			if (response.StatusCode == HttpStatusCode.NoContent)
+			{
+				if (InMemoryDatabaseCache.Categories.Remove(categoryToDelete))
+				{
+					_successfullyDeletedACategory = true;
+				}
+				else
+				{
+					_reasonUnsuccessfullyTriedToDeleteACategory = "An unexpected error has occurred. Please try again and if the issue persists contact the administrator.";
+					_unsuccessfullyTriedToDeleteACategory = true;
+				}
+			}
+			else
+			{
+				_reasonUnsuccessfullyTriedToDeleteACategory = $"The API didn't return an HttpStatusCode.NoContent status code. Instead the API returned the status code {response.StatusCode} and gave the following reason for failure: {response.ReasonPhrase}.";
+				_unsuccessfullyTriedToDeleteACategory = true;
+			}
+		}
+
+		_attemptingToDeleteACategory = false;
+		StateHasChanged();
+	}
+}

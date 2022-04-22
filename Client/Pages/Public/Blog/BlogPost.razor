@@ -1,0 +1,88 @@
+﻿@page "/blog/{CategoryName}/{PostTitle}"
+
+<Client.Components.Public.Shared.Navbar />
+
+<main class="container min-vh-90 py-5">
+	@if (_category == null || _post == null)
+	{
+		<LoadingDot />
+	}
+	else
+	{
+		<div class="row">
+			<div class="col-12 px-md-0">
+				<nav aria-label="breadcrumb">
+					<ol class="breadcrumb md-f-size-1-5">
+						<li class="breadcrumb-item"><a href="/blog">Blog</a></li>
+						<li class="breadcrumb-item"><a href="@($"/blog/{CategoryName}")">@_category.Name</a></li>
+						<li class="breadcrumb-item active" aria-current="page">@_post.Title</li>
+					</ol>
+				</nav>
+			</div>
+
+			<div class="col-12 shadow-no-hover py-5 px-md-5 mt-3">
+				<article class="blog-post">
+					<h2 class="fst-italic">@_post.Title</h2>
+					<p>@_post.PublishDate.Split(' ').First() by <a href="/about" class="text-dark">@_post.Author</a></p>
+
+					<hr />
+
+					@if (_loadingContent == true)
+					{
+						<LoadingDot />
+					}
+
+					<div @ref="_quillJSReadOnlyEditorDiv" class="p-0 mt-5"></div>
+				</article>
+			</div>
+
+			<div class="col-12 px-0 d-flex justify-content-end">
+				<a href="@($"/blog/{CategoryName}")" class="btn btn-secondary shadow">
+					<i class="fas fa-arrow-left"></i> Back to all posts in @_category.Name
+				</a>
+			</div>
+		</div>
+	}
+</main>
+
+<Client.Components.Public.Shared.Footer />
+
+@code
+{
+	[Parameter] public string CategoryName { get; set; }
+	[Parameter] public string PostTitle { get; set; }
+	[Inject] InMemoryDatabaseCache InMemoryDatabaseCache { get; set; }
+	[Inject] HttpClient HttpClient { get; set; }
+	[Inject] IJSRuntime JsRuntime { get; set; }
+	private Category _category = null;
+	private Post _post = null;
+	private ElementReference _quillJSReadOnlyEditorDiv;
+	private bool _loadingContent = false;
+	protected override async Task OnParametersSetAsync()
+	{
+		_loadingContent = true;
+
+		_category = await InMemoryDatabaseCache.GetCategoryByCategoryName(CategoryName.ConvertURLToTitle(), true, true);
+
+		string postTitleFromURL = PostTitle.ConvertURLToTitle();
+
+		_post = _category.Posts.First(post => post.Title.ToLowerInvariant() == postTitleFromURL);
+
+		StateHasChanged();
+
+		await Task.Delay(500);
+
+		await JsRuntime.InvokeVoidAsync("QuillFunctions.createQuill", _quillJSReadOnlyEditorDiv, false);
+
+		if (string.IsNullOrEmpty(_post.Content) == false)
+		{
+			await JsRuntime.InvokeAsync<object>("QuillFunctions.setQuillContent", _quillJSReadOnlyEditorDiv, _post.Content);
+		}
+
+		await JsRuntime.InvokeAsync<object>("QuillFunctions.disableQuillEditor", _quillJSReadOnlyEditorDiv);
+
+		_loadingContent = false;
+
+		StateHasChanged();
+	}
+}

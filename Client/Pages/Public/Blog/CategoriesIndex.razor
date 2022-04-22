@@ -1,0 +1,139 @@
+﻿@page "/blog/{CategoryName}"
+@using Client.Components.Public.Blog
+
+<Client.Components.Public.Shared.Navbar />
+
+<main class="container min-vh-90 py-5">
+	<div class="row">
+		<div class="col">
+			@if (_category == null || _publishedPosts == null)
+			{
+				<LoadingDot />
+			}
+			else
+			{
+				<nav aria-label="breadcrumb" class="ps-3 row md-f-size-1-5">
+					<ol class="breadcrumb">
+						<li class="breadcrumb-item"><a href="/blog">Blog</a></li>
+						<li class="breadcrumb-item active" aria-current="page">@_category.Name</li>
+					</ol>
+				</nav>
+
+				<h1 class="my-3">Blog posts in @_category.Name</h1>
+
+				@if (_publishedPosts.Count < 1)
+				{
+					<h3>No categories found.</h3>
+				}
+				else if (_publishedPosts.Count < 3)
+				{
+					<div class="row">
+						@foreach (var post in _publishedPosts)
+						{
+							<div class="col-md-4">
+								<BlogPostCard Category="_category" Post="post" />
+							</div>
+						}
+					</div>
+				}
+				else
+				{
+					@if (_publishedPosts.Count % 3 == 0)
+					{
+						@for (int i = 0; i < _publishedPosts.Count; i += 3)
+						{
+							<div class="row">
+								<div class="col-md-4">
+									<BlogPostCard Category="_category" Post="_publishedPosts[i]" />
+								</div>
+								<div class="col-md-4">
+									<BlogPostCard Category="_category" Post="_publishedPosts[i + 1]" />
+								</div>
+								<div class="col-md-4">
+									<BlogPostCard Category="_category" Post="_publishedPosts[i + 2]" />
+								</div>
+							</div>
+						}
+					}
+					else if (_publishedPosts.Count % 3 == 2)
+					{
+						@for (int i = 0; i < _publishedPosts.Count - 2; i += 3)
+						{
+							<div class="row">
+								<div class="col-md-4">
+									<BlogPostCard Category="_category" Post="_publishedPosts[i]" />
+								</div>
+								<div class="col-md-4">
+									<BlogPostCard Category="_category" Post="_publishedPosts[i + 1]" />
+								</div>
+								<div class="col-md-4">
+									<BlogPostCard Category="_category" Post="_publishedPosts[i + 2]" />
+								</div>
+							</div>
+						}
+
+						<div class="row">
+							<div class="col-md-4">
+								<BlogPostCard Category="_category" Post="_publishedPosts[_publishedPosts.Count - 2]" />
+							</div>
+							<div class="col-md-4">
+								<BlogPostCard Category="_category" Post="_publishedPosts[_publishedPosts.Count - 1]" />
+							</div>
+						</div>
+					}
+					else if (_publishedPosts.Count % 3 == 1)
+					{
+						@for (int i = 0; i < _publishedPosts.Count - 1; i += 3)
+						{
+							<div class="row">
+								<div class="col-md-4">
+									<BlogPostCard Category="_category" Post="_publishedPosts[i]" />
+								</div>
+								<div class="col-md-4">
+									<BlogPostCard Category="_category" Post="_publishedPosts[i + 1]" />
+								</div>
+								<div class="col-md-4">
+									<BlogPostCard Category="_category" Post="_publishedPosts[i + 2]" />
+								</div>
+							</div>
+						}
+
+						<div class="row">
+							<div class="col-md-4">
+								<BlogPostCard Category="_category" Post="_publishedPosts[_publishedPosts.Count - 1]" />
+							</div>
+						</div>
+					}
+				}
+			}
+		</div>
+	</div>
+</main>
+
+<Client.Components.Public.Shared.Footer />
+
+@code
+{
+	[Parameter] public string CategoryName { get; set; }
+	[Inject] InMemoryDatabaseCache InMemoryDatabaseCache { get; set; }
+	private Category _category = null;
+	private List<Post> _publishedPosts = null;
+	protected override async Task OnInitializedAsync()
+	{
+		if (_publishedPosts == null)
+		{
+			await InMemoryDatabaseCache.GetCategoriesFromDatabaseAndCache(false);
+		}
+
+		_category = await InMemoryDatabaseCache.GetCategoryByCategoryName(CategoryName.ConvertURLToTitle(), true, true);
+
+		if (_category.Posts.Count != 0)
+		{
+			_publishedPosts = _category.Posts.Where(post => post.Published == true).ToList();
+		}
+		else
+		{
+			_publishedPosts = new List<Post>();
+		}
+	}
+}

@@ -1,0 +1,18 @@
+﻿<div class="card shadow mb-4">
+    <img src="@($"{APIEndpoints.ServerBaseUrl}/{Post.ThumbnailImagePath}")" class="card-img-top" alt="Post thumbnail image" />
+    <div class="card-body">
+        <h3 class="card-title">@Post.Title</h3>
+        <p class="text-muted">By John Doe on @Post.PublishDate.Split(' ').First()</p>
+        <p class="card-text">@(String.Join(" ", Post.Excerpt.Split().Take(25).ToArray()))...</p>
+    </div>
+
+    <a href="@($"/blog/{Category.Name.ConvertTitleToURL().ToLowerInvariant()}/{Post.Title.ConvertTitleToURL().ToLowerInvariant()}")" class="btn btn-primary stretched-link md-f-size-1-5">
+        <i class="fas fa-book"></i> View posts
+    </a>
+</div>
+
+@code
+{
+    [Parameter] public Post Post { get; set; }
+    [Parameter] public Category Category { get; set; }
+}

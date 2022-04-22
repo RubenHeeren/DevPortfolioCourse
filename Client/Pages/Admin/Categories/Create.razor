@@ -1,0 +1,151 @@
+﻿@page "/admin/categories/create"
+@using System.Net;
+
+<main class="admin-area-main">
+	<Client.Components.Admin.Sidebar />
+
+	<div class="admin-area-content container-fluid bg-white">
+		<div class="row g-0">
+			<div class="col">
+
+				<h1 class="mb-4">@(_createSuccessful ? "Success! Go back to all categories to see the created category." : "Create category")</h1>
+				
+				@if (_attemptingToCreate == true)
+				{
+					<h1>Creating category...</h1>
+					<LoadingDot />
+				}
+				else if (_createSuccessful == false && _attemptingToCreate == false)
+				{
+					<EditForm Model="_categoryToCreate" OnValidSubmit="CreateCategory">
+						<DataAnnotationsValidator />
+
+						<div class="form-group mb-5">
+							<label for="categoryName">Category name</label>
+							<InputText @bind-Value="_categoryToCreate.Name" class="form-control" id="categoryName"></InputText>
+						</div>
+
+						<div class="form-group mb-5">
+							<label for="thumbnailImage">Thumbnail image (jpg/jpeg or png 1920x1080)</label>
+
+							@if (_attemptingToUploadImage == true)
+							{
+								<LoadingDot />
+							}
+							else if (_attemptToUploadFailed == true)
+							{
+								<h4 class="text-danger">Failed to upload image. @_reasonImageUploadFailed</h4>
+							}
+							else
+							{
+								<img src="@($"{APIEndpoints.ServerBaseUrl}/{_categoryToCreate.ThumbnailImagePath}")" class="admin-crud-form-thumbnail-image" alt="Post thumbnail image" />								
+							}							
+
+							<br />
+
+							<InputFile OnChange="HandleUploadedImage" class="form-control mt-4" id="thumbnailImage" />
+						</div>
+
+						<div class="form-group mb-5">
+							<label for="categoryDescription">Category description</label>
+							<InputText @bind-Value="_categoryToCreate.Description" class="form-control" id="categoryDescription"></InputText>
+						</div>
+
+						<ValidationSummary />
+
+						<button class="btn btn-success shadow d-block mt-5 md-f-size-1-5" type="submit">
+							<i class="far fa-save"></i> Save
+						</button>
+
+					</EditForm>
+				}
+
+				<a href="/admin/categories" class="btn btn-primary shadow mt-5 md-f-size-1-5">
+					<i class="fas fa-arrow-left"></i> Back to all categories
+				</a>
+			</div>
+		</div>
+	</div>
+</main>
+
+
+@code
+{
+	[Inject] HttpClient HttpClient { get; set; }
+	[Inject] InMemoryDatabaseCache InMemoryDatabaseCache { get; set; }
+	private Category _categoryToCreate = new Category() { ThumbnailImagePath = "uploads/placeholder.jpg", Posts = new List<Post>() };
+	private bool _attemptingToCreate = false;
+	private bool _attemptToCreateFailed = false;
+	private bool _createSuccessful = false;
+	private async Task CreateCategory()
+	{
+		_attemptingToCreate = true;
+
+		HttpResponseMessage response = await HttpClient.PostAsJsonAsync<Category>(APIEndpoints.s_categories, _categoryToCreate);
+
+		if (response.StatusCode == HttpStatusCode.Created)
+		{
+			Category addedCategory = await response.Content.ReadFromJsonAsync<Category>();
+			InMemoryDatabaseCache.Categories.Add(addedCategory);
+
+			_createSuccessful = true;
+		}
+		else
+		{
+			_attemptToCreateFailed = true;
+		}
+
+		_attemptingToCreate = false;
+	}
+
+	private bool _attemptingToUploadImage = false;
+	private bool _attemptToUploadFailed = false;
+	private string _reasonImageUploadFailed = null;
+	private async Task HandleUploadedImage(InputFileChangeEventArgs e)
+	{
+		_attemptingToUploadImage = true;
+
+		if (e.File.ContentType != "image/jpeg" && e.File.ContentType != "image/png")
+		{
+			_reasonImageUploadFailed = "Please only upload JPEG, JPG, or PNG images.";
+			_attemptToUploadFailed = true;
+		}
+		else if (e.File.Size >= 31457280) // 31457280 bytes = 30 megabytes
+		{
+			_reasonImageUploadFailed = "Please only upload images that are smaller than 30 MegaBytes (MB).";
+			_attemptToUploadFailed = true;
+		}
+		else
+		{
+			IBrowserFile uploadedImageFile = e.File;
+
+			byte[] imageAsByteArray = new byte[uploadedImageFile.Size];
+
+			// Fills the contents of the image byte array.
+			await uploadedImageFile.OpenReadStream(31457280).ReadAsync(imageAsByteArray);
+			string byteString = Convert.ToBase64String(imageAsByteArray);
+
+			UploadedImage uploadedImage = new UploadedImage()
+			{
+				NewImageFileExtension = uploadedImageFile.Name.Substring(uploadedImageFile.Name.Length - 4),
+				NewImageBase64Content = byteString,
+				OldImagePath = string.Empty
+			};
+
+			HttpResponseMessage response = await HttpClient.PostAsJsonAsync<UploadedImage>(APIEndpoints.s_imageUpload, uploadedImage); 
+
+			if (response.StatusCode == HttpStatusCode.Created)
+			{
+				_categoryToCreate.ThumbnailImagePath = await response.Content.ReadAsStringAsync();
+			}
+			else
+			{
+				_reasonImageUploadFailed = $"Something went wrong when making a request to the server. Server response code: {response.StatusCode}. Server reason: {response.ReasonPhrase}.";
+				_attemptToUploadFailed = true;
+			}
+		}
+
+		_attemptingToUploadImage = false;
+		StateHasChanged();
+	}
+}
